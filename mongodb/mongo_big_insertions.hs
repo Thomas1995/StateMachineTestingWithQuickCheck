@@ -9,6 +9,8 @@ import Test.QuickCheck.Monadic ( assert
                                , run
                                )
 
+import qualified System.IO.Streams as Streams ( fromList )
+
 maxCustomListSize :: Int
 maxCustomListSize = 10000000
 
@@ -40,10 +42,20 @@ customArgs = ( stdArgs { maxSuccess = 1000000000 } )
 mongoDBHasExpectedBehavior pipe instanceOfCustomPostList = monadicIO $ do
   realityMatchesModel <- run $ do
     let MkCustomPostList listOfCustomPosts = instanceOfCustomPostList
-    writeFile "test.log" $ show (length $ listOfCustomPosts) ++ "\n"
+
+    --listOfActions <- mapM mapAction listOfCustomSets
+    --myStream <- Streams.fromList listOfActions
+
+    writeFile "mongo.log" $ show (length $ listOfCustomPosts) ++ " insertions\n"
+
     return $ (1==0)
 
   assert $ realityMatchesModel
+
+  --where
+--    mapAction customPost = do
+--      access pipe master "test" $ insert "test"
+
 
 main :: IO ()
 main = do
