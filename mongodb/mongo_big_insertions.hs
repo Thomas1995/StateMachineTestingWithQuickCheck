@@ -17,7 +17,7 @@ maxCustomListSize = 10000000
 minCustomListSize :: Int
 minCustomListSize = 1000
 
-data CustomPost = MkCustomPost { post :: String }
+data CustomPost = MkCustomPost { post :: [Field] }
   deriving (Show)
 
 data CustomPostList = MkCustomPostList [CustomPost]
@@ -26,7 +26,7 @@ data CustomPostList = MkCustomPostList [CustomPost]
 instance Arbitrary CustomPost where
  arbitrary = do
    value <- listOf1 genSafeChar
-   return $ MkCustomPost $ "[\"value\" =: \"" ++ value ++ "\"]"
+   return $ MkCustomPost $ ["value" =: value]
   where
    genSafeChar = elements $ ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9']
 
@@ -43,18 +43,18 @@ mongoDBHasExpectedBehavior pipe instanceOfCustomPostList = monadicIO $ do
   realityMatchesModel <- run $ do
     let MkCustomPostList listOfCustomPosts = instanceOfCustomPostList
 
-    --listOfActions <- mapM mapAction listOfCustomSets
-    --myStream <- Streams.fromList listOfActions
+    listOfActions <- mapM mapAction listOfCustomPosts
+    myStream <- Streams.fromList listOfActions
 
-    writeFile "mongo.log" $ show (length $ listOfCustomPosts) ++ " insertions\n"
+    writeFile "history.log" $ show (length $ listOfCustomPosts) ++ " insertions\n"
 
     return $ (1==0)
 
   assert $ realityMatchesModel
 
-  --where
---    mapAction customPost = do
---      access pipe master "test" $ insert "test"
+  where
+    mapAction customPost = do
+      access pipe master "test" $ insert "test" $ post customPost
 
 
 main :: IO ()
