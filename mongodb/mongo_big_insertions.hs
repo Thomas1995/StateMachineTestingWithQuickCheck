@@ -1,8 +1,26 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-import Database.MongoDB
+import Database.MongoDB ( Field
+                        , access
+                        , connect
+                        , host
+                        , insert
+                        , master
+                        , (=:)
+                        )
 
-import Test.QuickCheck
+import Test.QuickCheck ( Arbitrary
+                       , Args
+                       , Gen
+                       , Property
+                       , arbitrary
+                       , maxSuccess
+                       , quickCheckWith
+                       , stdArgs
+                       , elements
+                       , listOf1
+                       , vectorOf
+                       )
 
 import Test.QuickCheck.Monadic ( assert
                                , monadicIO
@@ -54,10 +72,13 @@ mongoDBHasExpectedBehavior pipe instanceOfCustomPostList = monadicIO $ do
 
   where
     mapAction customPost = do
-      access pipe master "test" $ insert "test" $ post customPost
+      access pipe master dataBaseName $ insert dataBaseName $ post customPost
 
+
+dataBaseName = "test"
+serverAddress = "127.0.0.1"
 
 main :: IO ()
 main = do
-  pipe <- connect $ host "127.0.0.1"
+  pipe <- connect $ host serverAddress
   quickCheckWith customArgs (mongoDBHasExpectedBehavior pipe)
