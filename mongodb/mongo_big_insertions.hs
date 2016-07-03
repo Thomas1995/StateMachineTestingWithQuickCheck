@@ -14,11 +14,11 @@ import Test.QuickCheck ( Arbitrary
                        , Gen
                        , Property
                        , arbitrary
+                       , choose
                        , maxSuccess
                        , quickCheckWith
                        , stdArgs
                        , elements
-                       , listOf1
                        , vectorOf
                        )
 
@@ -30,7 +30,7 @@ import Test.QuickCheck.Monadic ( assert
 import qualified System.IO.Streams as Streams ( fromList )
 
 maxCustomListSize :: Int
-maxCustomListSize = 10000000
+maxCustomListSize = 1000000
 
 minCustomListSize :: Int
 minCustomListSize = 1000
@@ -43,15 +43,14 @@ data CustomPostList = MkCustomPostList [CustomPost]
 
 instance Arbitrary CustomPost where
  arbitrary = do
-   value <- listOf1 genSafeChar
+   size <- choose (1,100)
+   value <- vectorOf size $ elements $ ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9']
    return $ MkCustomPost $ ["value" =: value]
-  where
-   genSafeChar = elements $ ['a'..'z'] ++ ['A'..'Z'] ++ ['0'..'9']
 
 instance Arbitrary CustomPostList where
  arbitrary = do
-   size <- arbitrary
-   list <- vectorOf (size `mod` maxCustomListSize + minCustomListSize) (arbitrary :: Gen CustomPost)
+   size <- choose (minCustomListSize, maxCustomListSize)
+   list <- vectorOf size (arbitrary :: Gen CustomPost)
    return $ MkCustomPostList list
 
 customArgs :: Args
